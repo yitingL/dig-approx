@@ -418,12 +418,14 @@ void GA_Engine::mutate(vector<Chromosome>& cands,int ptr1, int ptr2, int count_f
                     int target_gene=new_cand.activeGenes[rand_ull(0,new_cand.activeGenes.size()-1)];
                     //int target_gene=rand_ull(0,new_cand.genes.size()-1);
                     //int select_fi=rand_ull(0,2);
+                    int substitute=merge(new_cand, target_gene);
                     for(int g=target_gene+1;g<new_cand.genes.size()-1;g++){
                         int id=new_cand.genes[g][1];
                         for(int gi=2; gi<=4; gi++){
                             if(new_cand.genes[g][gi]==new_cand.genes[target_gene][1]){
                                 //new_cand.genes[g][gi]=new_cand.genes[target_gene][select_fi+2];
-                                new_cand.genes[g][gi]=rand_ull(0, id-1);
+                                if(substitute==-1) new_cand.genes[g][gi]=rand_ull(0, id-1);
+                                else  new_cand.genes[g][gi]=substitute;
                             }
                         }
                     }
@@ -630,16 +632,16 @@ void GA_Engine::eval(vector<Chromosome> & cands){
                 if(cand.error_rate <= ERROR_RATE_THRESHOLD){
                     bestChromo=cand;
                     terminate_counter=0;
-                    cout << "# output size: " << bestChromo.size << endl;
-                    cout << "# error rate: " << bestChromo.error_rate << endl;
+                    //cout << "# output size: " << bestChromo.size << endl;
+                    //cout << "# error rate: " << bestChromo.error_rate << endl;
                     gen_blif(bestChromo, output_filename);
                 }
             }else if(cand.size==bestChromo.size && cand.error_rate < bestChromo.error_rate && cand.error_rate <= ERROR_RATE_THRESHOLD){
                 cand.error_rate=check_error_dist_of(cand,30);
                 if(cand.error_rate < bestChromo.error_rate && cand.error_rate < ERROR_RATE_THRESHOLD){
                     bestChromo=cand;
-                    cout << "# output size: " << bestChromo.size << endl;
-                    cout << "# error rate: " << bestChromo.error_rate << endl;
+                    //cout << "# output size: " << bestChromo.size << endl;
+                    //cout << "# error rate: " << bestChromo.error_rate << endl;
                     gen_blif(bestChromo, output_filename);
                 }
             }
@@ -712,7 +714,7 @@ int GA_Engine::start(int total_generation, int round_indicator){
     int mutate_step_size2=1;
     while(terminate_counter<total_generation){
         //cout << "-----------------" << endl;
-        //cout << "GA Generation: " << round_indicator << "." << ++generation_count << endl;
+        //cout << "GA Generation: " << round_indicator << "." << generation_count << endl;
         //cout << "orig_size: " << orig_size << endl;
         mutate(cands,0,setSize1-1,2,mutate_step_size1);
         mutate(cands,setSize1,setSize1+setSize2-1,2,mutate_step_size2);
@@ -727,9 +729,10 @@ int GA_Engine::start(int total_generation, int round_indicator){
         select(cands,setSize1,setSize2);
         
         //for(auto cand:cands) cand.print_info();
-        //if((++generation_count % 10)==0) cout << ">>> " << endl;
+        //cout << "best: "; bestChromo.print_info();
+        //if((generation_count % 10)==0) cout << ">>> " << endl;
+        generation_count++;
         cout << "[" << round_indicator << ", " << generation_count << ", " << terminate_counter << "] Completed." << endl;
-        //bestChromo.print_info();
         //cout << "terminate_counter: " << terminate_counter << endl;
         terminate_counter++;
         if(bestChromo.size<=orig_size*0.5){

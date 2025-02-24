@@ -10,11 +10,10 @@ COMP_OBJ = $(COMP_SRC:.cpp=.o)
 
 TARGET = main
 
-all: main comp
-
+all: main
+	chmod 777 ext/abc
+	chmod 777 ext/tig
 main : $(ALS_OBJ) $(COMMON_OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-comp: $(COMP_OBJ) $(COMMON_OBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

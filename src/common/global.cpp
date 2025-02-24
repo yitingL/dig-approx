@@ -18,8 +18,7 @@ void Global::setup_PO_vec_and_PO_weights(string ed_mode){
        6: square 
             asquared[0:127] <--> po0-po127
        7: bar
-
-
+            result[0:127] <--> po0-po127
        8: sin
 
        9: max
@@ -86,11 +85,27 @@ void Global::setup_PO_vec_and_PO_weights(string ed_mode){
             bitWeight*=2;
         }
     }else if(ed_mode=="bar"){
-
-    }else if(ed_mode=="sin"){
-
+        double bitWeight = 1.0 / (pow(2.0, 128) - 1.0);
+        int po_counter=0;
+        PO_vectors.resize(1);
+        for(int i=0; i<128; i++){
+            PO_vectors[0].push_back("po"+to_string(po_counter++));
+            PO_weights.push_back(bitWeight);
+            bitWeight*=2;
+        }
+    }else if(ed_mode=="max"){
+        double bitWeight = 1.0 / (pow(2.0, 128) - 1.0);
+        int po_counter=0;
+        PO_vectors.resize(2);
+        for(int i=0; i<128; i++){
+            PO_vectors[0].push_back("po"+to_string(po_counter++));
+            PO_weights.push_back(bitWeight);
+            bitWeight*=2;
+        }
+        PO_vectors[1].push_back("po"+to_string(po_counter++));
+        PO_vectors[1].push_back("po"+to_string(po_counter++));
     }else{
-        ed_mode="";
+        this->ed_mode="";
     }
 }
 void Global::show_time(){
