@@ -418,7 +418,7 @@ void GA_Engine::mutate(vector<Chromosome>& cands,int ptr1, int ptr2, int count_f
                     int target_gene=new_cand.activeGenes[rand_ull(0,new_cand.activeGenes.size()-1)];
                     //int target_gene=rand_ull(0,new_cand.genes.size()-1);
                     //int select_fi=rand_ull(0,2);
-                    int substitute=merge(new_cand, target_gene);
+                    int substitute=get_merged(new_cand, target_gene);
                     for(int g=target_gene+1;g<new_cand.genes.size()-1;g++){
                         int id=new_cand.genes[g][1];
                         for(int gi=2; gi<=4; gi++){
