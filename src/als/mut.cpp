@@ -9,7 +9,10 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
     unordered_map<int,int> ans;
     unordered_map<int, bitset<4>> assign_bit;
     unordered_map<int, bitset<4>> assign_known;
-    bitset<4> assign_valid;     //to record if the assignment is valid: 0 means conflict 
+    bitset<4> assign_valid;     //to record if the assignment is valid: 0 means conflict
+    for(auto g : chromo.genes){
+        assign_known[g[1]].reset();
+    }
     auto g = chromo.genes[getGeneIndex[getNode[domID]]];
     if((a + b + c) >= 2){
         ans[-1]=0;
@@ -26,6 +29,10 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_known[g[3]][0]=1; assign_known[g[4]][0]=1;
         assign_known[g[3]][1]=1; assign_known[g[4]][1]=1;
         assign_known[g[3]][2]=1; assign_known[g[4]][2]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
+        assign_valid[1]=1;
+        assign_valid[2]=1;
     }else if(b==1){
         assign_bit[g[2]].reset();
         assign_bit[g[4]].reset();
@@ -33,6 +40,8 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_known[g[2]].reset();
         assign_known[g[4]].reset();
         assign_known[g[2]][0]=1; assign_known[g[4]][0]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
     }else if(c==1){
         assign_bit[g[3]].reset();
         assign_bit[g[4]].reset();
@@ -44,16 +53,24 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_known[g[3]][0]=1; assign_known[g[4]][0]=1;
         assign_known[g[3]][1]=1; assign_known[g[4]][1]=1;
         assign_known[g[3]][2]=1; assign_known[g[4]][2]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
+        assign_valid[1]=1;
+        assign_valid[2]=1;
     }else{
         cerr << "error in getMA" << endl;
         exit(0);
     }
-    assign_valid.set();
-    assign_bit[ntID][0]= sa ? 0 : 1;
-    assign_known[ntID][0]= 1;
+    if(sa){
+        assign_bit[ntID].reset();
+        assign_known[ntID].set();    
+    }else{
+        assign_bit[ntID].set();
+        assign_known[ntID].set();            
+    }
     assign_bit[getID[orig_circuit->constant1]].set();
     assign_known[getID[orig_circuit->constant1]].set();
-    assign_bit[getID[orig_circuit->constant0]].set();  
+    assign_bit[getID[orig_circuit->constant0]].reset();  
     assign_known[getID[orig_circuit->constant0]].set();    
     /*logic implication by bitset
     The forward implications are:
@@ -77,7 +94,6 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         10  10  10 | 10                             10  11  10 | 11
         else       | 0-                             else       | 0-
 
-
     Check-Then-Assign: For any node, we have to check implicated value with the original value before
     assigning the value to the node. If the values conflicts, we assert the valid bit of the assginments to 0.
 
@@ -93,7 +109,8 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         10   11  | --   0
         11   10  | --   0
     */
-    int count=300; 
+    bitset<65536> implied_nodes;
+    implied_nodes.reset(); 
     list<int> Q;
     for(int k : fos_of[getID[orig_circuit->constant1]]){
         Q.push_back(k);
@@ -109,9 +126,10 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
     Q.push_back(g[3]);
     Q.push_back(g[4]);
     Q.push_back(ntID);
-    while(count-- && !Q.empty()){
+    while(implied_nodes.count()<300 && !Q.empty()){
         int nd=Q.front();
         Q.pop_front();
+        implied_nodes.set(nd);
         auto g = chromo.genes[getGeneIndex[getNode[nd]]];
         auto ob = assign_bit[g[1]];
         auto ok = assign_known[g[1]];
@@ -330,6 +348,10 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_bit[g[4]] = zb;
         assign_known[g[4]] = zk;
     }
+    if(assign_valid.none()){
+        ans[-1]=1;
+        return ans;
+    }
     /*
     To find the intersection of bit1 and bit0, we can use the following method:
         Define: <1> valid_bits,   <2> assign_known,   <3> assign_bit
@@ -337,7 +359,7 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         Condition [2]: <1> & <2> & ~<3> all zero --> there is no assignment-(1,1,0) in these three bitsets.
         Condition [3]: <1> & ~<2> all zero --> there is no assignment-(1,0,-) in these three bitsets.
     */
-    for(auto g : chromo.genes){     //intersect
+    for(auto g : chromo.genes){
         auto cond1 = assign_valid & assign_known[g[1]] & assign_bit[g[1]];
         auto cond2 = assign_valid & assign_known[g[1]] & ~assign_bit[g[1]];
         auto cond3 = assign_valid & ~assign_known[g[1]];
@@ -347,13 +369,12 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
             ans[g[1]] = 0;
         }
     }
-    if(ans.empty()){
-        ans[-1]=1;
-    }
     return ans;
 }
-int GA_Engine::check_subs(Chromosome& chromo, unordered_map<int,int>& ma0, unordered_map<int,int>& ma1){
+int GA_Engine::check_subs(int nt, Chromosome& chromo, unordered_map<int,int>& ma0, unordered_map<int,int>& ma1, unordered_map<int, bitset<65536>>& tfo){
     for(auto& g : chromo.genes){
+        if(g[1]==nt) continue;
+        if(tfo[nt].test(g[1])) continue;
         if(ma0[g[1]]==1 && ma1[g[1]]==0){
             return g[1];
         }
@@ -441,7 +462,8 @@ int GA_Engine::get_merged(Chromosome& chromo, int nt){
             100  fault from input z
     dom[nd][id] : 1 if id is in the dominators set of nd
     */
-    unordered_map<int, int> level;   //index: id
+    assert(chromo.genes.size() < 65536);
+    unordered_map<int, int> level;
     for(auto nd:orig_circuit->PIs) level[getID[nd]]=0;
     level[getID[orig_circuit->constant0]]=0;
     level[getID[orig_circuit->constant1]]=0;
@@ -456,15 +478,15 @@ int GA_Engine::get_merged(Chromosome& chromo, int nt){
         auto z=level[g[4]];
         level[g[1]]=max({x,y,z})+1;
     }
-    unordered_map<int, vector<int>> fos_of; //index: id
+    unordered_map<int, vector<int>> fos_of;
     for(auto g : chromo.genes){
         fos_of[g[2]].push_back(g[1]);
         fos_of[g[3]].push_back(g[1]);
         fos_of[g[4]].push_back(g[1]);
     }
-    assert(chromo.genes.size() < 65536);
-    unordered_map<int, bitset<65536>> dom;     //index: id
-    unordered_map<int, bitset<262144>> domSI;  //index: id
+    unordered_map<int, bitset<65536>> dom; 
+    unordered_map<int, bitset<262144>> domSI;
+    unordered_map<int, bitset<65536>> tfo; 
     for(int i=chromo.genes.size()-1; i>=0; i--){
         auto g=chromo.genes[i];
         NodeType type=(NodeType) g[0];
@@ -495,6 +517,25 @@ int GA_Engine::get_merged(Chromosome& chromo, int nt){
         }
         if(g[1]==nt) break;
     }
+    for(int i=chromo.genes.size()-1; i>=0; i--){
+        auto g=chromo.genes[i];
+        NodeType type=(NodeType) g[0];
+        if(type==PI||type==CONST0||type==CONST1||type==PO_BUF||type==PO_NOT){
+            cerr << "error in merge_node_with_a_merger" << endl;
+            exit(0);
+        }
+        if(fos_of[g[1]].size()==0){
+            tfo[g[1]].reset();
+            tfo[g[1]].set(g[1]);
+        }else{
+            tfo[g[1]]=tfo[fos_of[g[1]][0]];
+            for(int fo : fos_of[g[1]]){
+                tfo[g[1]] |= tfo[fo];
+            }
+            tfo[g[1]].set(g[1]);
+        }
+        if(g[1]==nt) break;
+    }
     int cnt=0;
     for(auto g : chromo.genes){
         if(dom[nt].test(g[1])){
@@ -508,12 +549,12 @@ int GA_Engine::get_merged(Chromosome& chromo, int nt){
                     if(ma1[-1]==1){
                         return getID[orig_circuit->constant1];
                     }else if(ma1[-1]!=0 && ma0[-1]!=0){
-                        return check_subs(chromo,ma0,ma1);
+                        return check_subs(nt,chromo,ma0,ma1,tfo);
                     }
                 }
             }
         }
     }
-    assert(cnt < 5);
+    assert(cnt <= 5);
     return -1;
 }
