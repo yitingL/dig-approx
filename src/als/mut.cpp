@@ -14,11 +14,7 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_known[g[1]].reset();
     }
     auto g = chromo.genes[getGeneIndex[getNode[domID]]];
-    if((a + b + c) >= 2){
-        ans[-1]=0;
-        return ans;
-    }
-    if(a==1){
+    if(a && !b && !c){
         assign_bit[g[3]].reset();
         assign_bit[g[4]].reset();
         assign_bit[g[3]][0]=0; assign_bit[g[4]][0]=0;
@@ -33,7 +29,7 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_valid[0]=1;
         assign_valid[1]=1;
         assign_valid[2]=1;
-    }else if(b==1){
+    }else if(!a && b && !c){
         assign_bit[g[2]].reset();
         assign_bit[g[4]].reset();
         assign_bit[g[2]][0]=1; assign_bit[g[4]][0]=0;
@@ -42,7 +38,7 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_known[g[2]][0]=1; assign_known[g[4]][0]=1;
         assign_valid.reset();
         assign_valid[0]=1;
-    }else if(c==1){
+    }else if(!a && !b && c){
         assign_bit[g[3]].reset();
         assign_bit[g[4]].reset();
         assign_bit[g[3]][0]=0; assign_bit[g[4]][0]=0;
@@ -57,9 +53,77 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_valid[0]=1;
         assign_valid[1]=1;
         assign_valid[2]=1;
+    }else if(a && b && !c){
+        assign_bit[g[2]].reset();
+        assign_bit[g[3]].reset();
+        assign_bit[g[4]].reset();
+        assign_bit[g[2]][0]=(sa?1:0); assign_bit[g[3]][0]=(sa?1:0); assign_bit[g[4]][0]=1;
+        assign_bit[g[2]][1]=(sa?0:1); assign_bit[g[3]][1]=(sa?0:1); assign_bit[g[4]][1]=1;
+        assign_bit[g[2]][2]=(sa?1:0); assign_bit[g[3]][2]=(sa?0:1);
+        assign_bit[g[2]][3]=(sa?0:1); assign_bit[g[3]][3]=(sa?1:0);
+        assign_known[g[2]].reset();
+        assign_known[g[3]].reset();
+        assign_known[g[4]].reset();
+        assign_known[g[2]][0]=1; assign_known[g[3]][0]=1; assign_known[g[4]][0]=1;
+        assign_known[g[2]][1]=1; assign_known[g[3]][1]=1; assign_known[g[4]][1]=1;
+        assign_known[g[2]][2]=1; assign_known[g[3]][2]=1;
+        assign_known[g[2]][3]=1; assign_known[g[3]][3]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
+        assign_valid[1]=1;
+        assign_valid[2]=1;
+        assign_valid[3]=1;
+    }else if(!a && b && c){
+        assign_bit[g[2]].reset();
+        assign_bit[g[3]].reset();
+        assign_bit[g[4]].reset();
+        assign_bit[g[2]][0]=0; assign_bit[g[3]][0]=(sa?1:0); assign_bit[g[4]][0]=(sa?0:1);
+        assign_bit[g[2]][1]=0; assign_bit[g[3]][1]=(sa?0:1); assign_bit[g[4]][1]=(sa?1:0);
+        assign_bit[g[3]][2]=(sa?1:0); assign_bit[g[4]][2]=(sa?1:0);
+        assign_bit[g[3]][3]=(sa?0:1); assign_bit[g[4]][3]=(sa?0:1);
+        assign_known[g[2]].reset();
+        assign_known[g[3]].reset();
+        assign_known[g[4]].reset();
+        assign_known[g[2]][0]=1; assign_known[g[3]][0]=1; assign_known[g[4]][0]=1;
+        assign_known[g[2]][1]=1; assign_known[g[3]][1]=1; assign_known[g[4]][1]=1;
+        assign_known[g[3]][2]=1; assign_known[g[4]][2]=1;
+        assign_known[g[3]][3]=1; assign_known[g[4]][3]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
+        assign_valid[1]=1;
+        assign_valid[2]=1;
+        assign_valid[3]=1;
+    }else if(a && !b && c){
+        assign_bit[g[2]].reset();
+        assign_bit[g[3]].reset();
+        assign_bit[g[4]].reset();
+        assign_bit[g[2]][0]=(sa?1:0); assign_bit[g[3]][0]=1; assign_bit[g[4]][0]=(sa?0:1);
+        assign_bit[g[2]][1]=(sa?0:1); assign_bit[g[3]][1]=0; assign_bit[g[4]][1]=(sa?1:0);
+        assign_known[g[2]].reset();
+        assign_known[g[3]].reset();
+        assign_known[g[4]].reset();
+        assign_known[g[2]][0]=1; assign_known[g[3]][0]=1; assign_known[g[4]][0]=1;
+        assign_known[g[2]][1]=1; assign_known[g[3]][1]=1; assign_known[g[4]][1]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
+        assign_valid[1]=1;
+    }else if(a && b && c){
+        assign_bit[g[2]].reset();
+        assign_bit[g[3]].reset();
+        assign_bit[g[4]].reset();
+        assign_bit[g[2]][0]=(sa?1:0); assign_bit[g[3]][0]=(sa?1:0); assign_bit[g[4]][0]=(sa?0:1);
+        assign_bit[g[2]][0]=(sa?0:1); assign_bit[g[3]][0]=(sa?0:1); assign_bit[g[4]][0]=(sa?1:0);
+        assign_known[g[2]].reset();
+        assign_known[g[3]].reset();
+        assign_known[g[4]].reset();
+        assign_known[g[2]][0]=1; assign_known[g[3]][0]=1; assign_known[g[4]][0]=1;
+        assign_known[g[2]][1]=1; assign_known[g[3]][1]=1; assign_known[g[4]][1]=1;
+        assign_valid.reset();
+        assign_valid[0]=1;
+        assign_valid[1]=1;
     }else{
-        cerr << "error in getMA" << endl;
-        exit(0);
+        ans[-1]=0;
+        return ans;
     }
     if(sa){
         assign_bit[ntID].reset();
@@ -413,7 +477,7 @@ int GA_Engine::check_subs(int nt, Chromosome& chromo, unordered_map<int,int>& ma
                     break;
                 }
                 case DotOI:{
-                    g[0]=DotOI;
+                    g[0]=Dot;
                     break;
                 }
                 case DotXOI:{
@@ -476,7 +540,7 @@ int GA_Engine::get_merged(Chromosome& chromo, int nt){
         auto x=level[g[2]];
         auto y=level[g[3]];
         auto z=level[g[4]];
-        level[g[1]]=max({x,y,z})+1;
+        level[g[1]]=max({x,y,z})+1; 
     }
     unordered_map<int, vector<int>> fos_of;
     for(auto g : chromo.genes){

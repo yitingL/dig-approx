@@ -554,6 +554,45 @@ void GA_Engine::learn_from_survivor(vector<Chromosome>& cands){
         cands[cands.size()-1]=bestChromo;
     }
 }
+void GA_Engine::trim_more(Chromosome &chromo){
+    unordered_map<int, vector<int>> fos_of;
+    for(auto g : chromo.genes){
+        fos_of[g[2]].push_back(g[1]);
+        fos_of[g[3]].push_back(g[1]);
+        fos_of[g[4]].push_back(g[1]);
+    }
+    int c0 = getID[orig_circuit->constant0];
+    int c1 = getID[orig_circuit->constant1];
+    for(auto g: chromo.genes){
+        bitset<4> inv_m = getInvMapByNodeType((NodeType)g[0]);
+        if( (g[2]==c0 && inv_m[0]==0) || (g[2]==c1 && inv_m[0]==1) ){
+            for(int f: fos_of[g[1]]){
+                int f_gIndx = getGeneIndex[getNode[f]];
+                bitset<4> f_inv_m = getInvMapByNodeType((NodeType)chromo.genes[f_gIndx][0]);
+                for(int gi=2; gi<=4; gi++){
+                    if(chromo.genes[f_gIndx][gi]==g[1]){
+                        chromo.genes[f_gIndx][gi]=g[4];
+                        if((inv_m[2]==0 && inv_m[3]==1) || (inv_m[2]==1 && inv_m[3]==0)) f_inv_m.flip(gi-2);
+                    }
+                }
+                chromo.genes[f_gIndx][0] = getNodeTypeByInvMap(f_inv_m);
+            }
+        }else if( (g[4]==c1 && inv_m[2]==0) || (g[4]==c0 && inv_m[2]==1) ){
+            for(int f: fos_of[g[1]]){
+                int f_gIndx = getGeneIndex[getNode[f]];
+                bitset<4> f_inv_m = getInvMapByNodeType((NodeType)chromo.genes[f_gIndx][0]);
+                for(int gi=2; gi<=4; gi++){
+                    if(chromo.genes[f_gIndx][gi]==g[1]){
+                        chromo.genes[f_gIndx][gi]=g[2];
+                        if((inv_m[0]==0 && inv_m[3]==0) || (inv_m[0]==1 && inv_m[3]==1)) f_inv_m.flip(gi-2);
+                    }
+                }
+                chromo.genes[f_gIndx][0] = getNodeTypeByInvMap(f_inv_m);
+            }
+        }
+    }
+}
+
 void GA_Engine::eval(vector<Chromosome> & cands){
     if(global->ed_mode==""){
         for(Chromosome& cand:cands){
@@ -561,6 +600,7 @@ void GA_Engine::eval(vector<Chromosome> & cands){
             if(cand.data_avail){
                 //cand.fitness_val*=0.95;   //aging
             }else{
+                trim_more(cand);
                 cand.error_rate=check_error_rate_of(cand,3);
                 cand.size=check_size_of(cand);
                 cand.diff_rate=get_difference_rate(cand,orig);
@@ -614,6 +654,7 @@ void GA_Engine::eval(vector<Chromosome> & cands){
     }else{
         for(Chromosome& cand:cands){
             if(global->check_if_time_out()) return;
+            trim_more(cand);
             cand.error_rate=check_error_dist_of(cand,3);
             cand.size=check_size_of(cand);
             cand.diff_rate=get_difference_rate(cand,orig);

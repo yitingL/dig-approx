@@ -56,6 +56,54 @@ inline unordered_map <NodeType, string> typeName = {
     {DotXYOI,"DotXYOI"},{DotYZOI,"DotYZOI"},{DotXZOI,"DotXZOI"},{DotXYZOI,"DotXYZOI"},
 };
 
+inline bitset<4> getInvMapByNodeType(NodeType ntype){
+    //bit0: x, bit1: y, bit2: z, bit3: o
+    //0: no inversion, 1: inversion
+    switch(ntype){
+        case Dot: return bitset<4>(0);
+        case DotXI: return bitset<4>(1);
+        case DotYI: return bitset<4>(2);
+        case DotZI: return bitset<4>(4);    
+        case DotXYI: return bitset<4>(3);
+        case DotYZI: return bitset<4>(6);
+        case DotXZI: return bitset<4>(5);
+        case DotXYZI: return bitset<4>(7);
+        case DotOI: return bitset<4>(8);
+        case DotXOI: return bitset<4>(9);
+        case DotYOI: return bitset<4>(10);
+        case DotZOI: return bitset<4>(12);
+        case DotXYOI: return bitset<4>(11);
+        case DotYZOI: return bitset<4>(14);
+        case DotXZOI: return bitset<4>(13);
+        case DotXYZOI: return bitset<4>(15);
+        default:
+            cerr << "error in get_inv_mapping" << endl;
+            exit(0);
+    }
+}
+inline NodeType getNodeTypeByInvMap(bitset<4> invMap){
+    switch(invMap.to_ulong()){
+        case 0: return Dot;
+        case 1: return DotXI;
+        case 2: return DotYI;
+        case 4: return DotZI;
+        case 3: return DotXYI;
+        case 6: return DotYZI;
+        case 5: return DotXZI;
+        case 7: return DotXYZI;
+        case 8: return DotOI;
+        case 9: return DotXOI;
+        case 10: return DotYOI;
+        case 12: return DotZOI;
+        case 11: return DotXYOI;
+        case 14: return DotYZOI;
+        case 13: return DotXZOI;
+        case 15: return DotXYZOI;
+        default:
+            cerr << "error in getNodeType" << endl;
+            exit(0);
+    }
+}
 class Node{
 public:
     string name;
@@ -150,6 +198,7 @@ public:
     int get_merged(Chromosome& chromo, int nt);
     unordered_map<int,int> getMA(bool,Chromosome&,int,int,unordered_map<int,vector<int>>&, unordered_map<int, bitset<65536>>&,unordered_map<int, bitset<262144>>&);
     int check_subs(int, Chromosome& chromo, unordered_map<int,int>& ma0, unordered_map<int,int>& ma1, unordered_map<int,bitset<65536>>&);
+    void trim_more(Chromosome &chromo);
 };
 
 // Simulator - Circuit
