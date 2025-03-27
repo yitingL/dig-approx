@@ -1,12 +1,13 @@
 # Approximate Logic Synthesis for Dot-Inverter Graphs
 
-# To Compile
+
+## To Compile
 In this directory,
 ```
 $ make
 ```
 
-# To Run
+## To Run
 In this directory,
 ```
 $ ./main ...
@@ -18,6 +19,6 @@ $ ./main ...
         [-d <ed_mode>]
 ```
 
-# References
+## References
 - [ABC: System for Sequential Logic Synthesis and Formal Verification](https://github.com/berkeley-abc/abc)
 - https://github.com/lsils/mockturtle
