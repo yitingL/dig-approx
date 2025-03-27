@@ -2,16 +2,23 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, int domID, unordered_map<int, vector<int>>& fos_of, unordered_map<int, bitset<65536>>& dom, unordered_map<int, bitset<262144>>& domSI){
+void GA_Engine::getMA(unordered_map<int,int>& ma, bool sa, Chromosome& chromo, int ntID, int domID, unordered_map<int, vector<int>>& fos_of, unordered_map<int, bitset<65536>>& dom, unordered_map<int, bitset<262144>>& domSI){
     bool a=domSI[domID][3*domID];
     bool b=domSI[domID][3*domID+1]; 
     bool c=domSI[domID][3*domID+2];
-    unordered_map<int,int> ans;
     unordered_map<int, bitset<4>> assign_bit;
     unordered_map<int, bitset<4>> assign_known;
     bitset<4> assign_valid;     //to record if the assignment is valid: 0 means conflict
     for(auto g : chromo.genes){
-        assign_known[g[1]].reset();
+        if(ma[g[1]]==5){
+            assign_known[g[1]].set();
+            assign_bit[g[1]].set();
+        }else if(ma[g[1]]==-5){
+            assign_known[g[1]].set();
+            assign_bit[g[1]].reset();
+        }else{
+            assign_known[g[1]].reset();
+        }
     }
     auto g = chromo.genes[getGeneIndex[getNode[domID]]];
     if(a && !b && !c){
@@ -122,8 +129,10 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_valid[0]=1;
         assign_valid[1]=1;
     }else{
-        ans[-1]=0;
-        return ans;
+        cerr << "error in getMA(1): " << sa << endl;
+        exit(0);
+        //ans[-1]=0;
+        //return ans;
     }
     if(sa){
         assign_bit[ntID].reset();
@@ -413,8 +422,8 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         assign_known[g[4]] = zk;
     }
     if(assign_valid.none()){
-        ans[-1]=1;
-        return ans;
+        ma[-1]=1;
+        return;
     }
     /*
     To find the intersection of bit1 and bit0, we can use the following method:
@@ -428,21 +437,21 @@ unordered_map<int,int> GA_Engine::getMA(bool sa, Chromosome& chromo, int ntID, i
         auto cond2 = assign_valid & assign_known[g[1]] & ~assign_bit[g[1]];
         auto cond3 = assign_valid & ~assign_known[g[1]];
         if(!cond1.none() && cond2.none() && cond3.none()){
-            ans[g[1]] = 1;
+            ma[g[1]] = 5;
         }else if(cond1.none() && !cond2.none() && cond3.none()){
-            ans[g[1]] = 0;
+            ma[g[1]] = -5;
         }
     }
-    return ans;
+    return;
 }
 int GA_Engine::check_subs(int nt, Chromosome& chromo, unordered_map<int,int>& ma0, unordered_map<int,int>& ma1, unordered_map<int, bitset<65536>>& tfo){
     for(auto& g : chromo.genes){
         if(g[1]==nt) continue;
         if(tfo[nt].test(g[1])) continue;
-        if(ma0[g[1]]==1 && ma1[g[1]]==0){
+        if(ma0[g[1]]==5 && ma1[g[1]]==-5){
             return g[1];
         }
-        if(ma0[g[1]]==0 && ma1[g[1]]==1){
+        if(ma0[g[1]]==-5 && ma1[g[1]]==5){
             switch((NodeType) g[0]){
                 case Dot:{
                     g[0]=DotOI;
@@ -600,25 +609,30 @@ int GA_Engine::get_merged(Chromosome& chromo, int nt){
         }
         if(g[1]==nt) break;
     }
+    unordered_map<int,int> ma0;
+    unordered_map<int,int> ma1;
     int cnt=0;
+    int ans_sub=-1;
     for(auto g : chromo.genes){
         if(dom[nt].test(g[1])){
             if((g[1] != nt) && level[g[1]] <= level[nt]+5){
                 cnt++;
-                unordered_map<int,int> ma0 = getMA(0,chromo,nt,g[1],fos_of,dom,domSI);
+                getMA(ma0,0,chromo,nt,g[1],fos_of,dom,domSI);
                 if(ma0[-1]==1){
                     return getID[orig_circuit->constant0];
                 }else{
-                    unordered_map<int,int> ma1 = getMA(1,chromo,nt,g[1],fos_of,dom,domSI);
+                    getMA(ma1,1,chromo,nt,g[1],fos_of,dom,domSI);
                     if(ma1[-1]==1){
                         return getID[orig_circuit->constant1];
-                    }else if(ma1[-1]!=0 && ma0[-1]!=0){
-                        return check_subs(nt,chromo,ma0,ma1,tfo);
+                    }else{
+                        ans_sub = check_subs(nt,chromo,ma0,ma1,tfo);
+                        if(ans_sub!=-1) return ans_sub;
                     }
                 }
             }
         }
     }
-    assert(cnt <= 5);
+    assert(cnt<=5);
     return -1;
 }
+

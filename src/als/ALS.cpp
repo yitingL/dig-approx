@@ -78,6 +78,7 @@ int main(int argc, char* argv[]){
     
     // Random seed generation
     auto seed=time(0);
+    //auto seed=1737891365;
     rand_generator.seed(seed);
     cout << "seed: " << seed << endl;
     ofstream fout("../temp/seed.txt");

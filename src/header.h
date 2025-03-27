@@ -196,7 +196,7 @@ public:
     void select(vector<Chromosome>& cands, int trim_size1, int trim_size2);
     int start(int total_generation, int round_indicator);
     int get_merged(Chromosome& chromo, int nt);
-    unordered_map<int,int> getMA(bool,Chromosome&,int,int,unordered_map<int,vector<int>>&, unordered_map<int, bitset<65536>>&,unordered_map<int, bitset<262144>>&);
+    void getMA(unordered_map<int,int>&,bool,Chromosome&,int,int,unordered_map<int,vector<int>>&, unordered_map<int, bitset<65536>>&,unordered_map<int, bitset<262144>>&);
     int check_subs(int, Chromosome& chromo, unordered_map<int,int>& ma0, unordered_map<int,int>& ma1, unordered_map<int,bitset<65536>>&);
     void trim_more(Chromosome &chromo);
 };

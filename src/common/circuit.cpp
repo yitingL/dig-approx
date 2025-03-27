@@ -238,7 +238,8 @@ void Circuit::read_dig(string filename){
                         current_node->type=DotXYZOI;
                     }
                 }else{
-                    cerr << "error in identifying a node: " << current_node->name << endl;
+                    cerr << "error in identifying a node: " << current_node->name << " in reading " << filename << endl;
+                    cerr << "current_node->fi.size() = " << current_node->fi.size() << ", planes.size() = " << planes.size() << endl;
                     exit(0);
                 }
                 planes.clear();
