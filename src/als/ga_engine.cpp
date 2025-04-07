@@ -415,15 +415,17 @@ void GA_Engine::mutate(vector<Chromosome>& cands,int ptr1, int ptr2, int count_f
             for(int k=0; k<step_size; k++){
                 int mut_type=rand_ull(0, 1);
                 if(mut_type==0){    //REMOVE
-                    int target_gene=new_cand.activeGenes[rand_ull(0,new_cand.activeGenes.size()-1)];
+                    int target_geneIndex=new_cand.activeGenes[rand_ull(0,new_cand.activeGenes.size()-1)];
                     //int target_gene=rand_ull(0,new_cand.genes.size()-1);
                     //int select_fi=rand_ull(0,2);
-                    int substitute=get_merged(new_cand, target_gene);
-                    for(int g=target_gene+1;g<new_cand.genes.size()-1;g++){
+                    int targetGeneID = new_cand.genes[target_geneIndex][1];
+                    int substitute=get_merged(new_cand, targetGeneID);
+                    //if(substitute!=-1) cout << "subsitute: " << substitute << endl;
+                    for(int g=target_geneIndex+1;g<new_cand.genes.size()-1;g++){
                         int id=new_cand.genes[g][1];
                         for(int gi=2; gi<=4; gi++){
-                            if(new_cand.genes[g][gi]==new_cand.genes[target_gene][1]){
-                                //new_cand.genes[g][gi]=new_cand.genes[target_gene][select_fi+2];
+                            if(new_cand.genes[g][gi]==new_cand.genes[target_geneIndex][1]){
+                                //new_cand.genes[g][gi]=new_cand.genes[target_geneIndex][select_fi+2];
                                 if(substitute==-1) new_cand.genes[g][gi]=rand_ull(0, id-1);
                                 else  new_cand.genes[g][gi]=substitute;
                             }
@@ -728,7 +730,7 @@ GA_Engine::GA_Engine(Global& global, Circuit* circuit, Circuit* golden_circuit, 
     terminate_signal=false;
 
     output_filename=output_blif;
-    this->ERROR_RATE_THRESHOLD=error_rate_threshold; //for safety
+    this->ERROR_RATE_THRESHOLD=error_rate_threshold;
     this->global=&global;
 }
 void Chromosome::print_info(){
